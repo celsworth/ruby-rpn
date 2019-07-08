@@ -34,6 +34,13 @@ module RPN
       # not. This is used to determine whether the next parenthesis we
       # encounter is a precedence or function parenthesis.
       @after_function = false
+
+      # When we're in function parentheses, each comma denotes a new function
+      # argument; this is incremented when we find one. When we eventually
+      # encounter the closing parenthesois for a function, the integer is
+      # pushed onto the stack immediately before the function name, so the
+      # calculator will know how many args the function has.
+      @function_args = 0
     end
 
     def parse
@@ -46,16 +53,24 @@ module RPN
         else handle_operand(term)
         end
 
-        # this boolean marks when we are immediately after a function, so
-        # in the next loop iteration we can determine if a ( is a function
-        # parenthesis or a precedence one.
-        @after_function = FUNCTIONS.key?(term)
+        update_bools(term)
       end
 
       rpn_expr.concat(op_stack.reverse!)
     end
 
     private
+
+    def update_bools(term)
+      # this boolean marks when we are immediately after a function, so
+      # in the next loop iteration we can determine if a ( is a function
+      # parenthesis or a precedence one.
+      @after_function = FUNCTIONS.key?(term)
+
+      # rubocop:disable Style/MultipleComparison shut up it's faster
+      @after_paren &= term == '(' || term == ')'
+      # rubocop:enable Style/MultipleComparison
+    end
 
     # Called when we encounter a known function.
     #
@@ -80,6 +95,7 @@ module RPN
         op_stack << operator
         @next_op_is_unary = true
       end
+      @after_paren = false
     end
 
     # Called when we encounter a ,
@@ -92,6 +108,8 @@ module RPN
     #
     def handle_comma
       rpn_expr << op_stack.pop until op_stack.empty? || op_stack.last == '('
+      @function_args += 1
+      @after_paren = false
     end
 
     # Called when we encounter a (
@@ -103,19 +121,23 @@ module RPN
       op_stack << '('
       @parens << (@after_function ? :function : :precedence)
       @next_op_is_unary = true
+      @after_paren = true
     end
 
     # Called when we encounter a )
     #
     def handle_closing_parenthesis
-      rpn_expr << op_stack.pop until op_stack.empty? || op_stack.last == '('
-      raise ArgumentError, 'unbalanced parentheses' if op_stack.empty?
+      if @parens.last == :precedence && op_stack.last == '('
+        # ignore empty sets of precedence params
+        op_stack.pop # drop opening paren
+        @parens.pop
+      else
+        rpn_expr << op_stack.pop until op_stack.empty? || op_stack.last == '('
+        raise ArgumentError, 'unbalanced parentheses' if op_stack.empty?
 
-      op_stack.pop # lose the opening paren
-      if @parens.pop == :function
-        # this was a function closing parenthesis, so pop the stacked
-        # function onto the rpn expression
-        rpn_expr << op_stack.pop
+        op_stack.pop # drop opening paren
+
+        pop_function if @parens.pop == :function
       end
       @next_op_is_unary = false
     end
@@ -124,6 +146,20 @@ module RPN
     def handle_operand(operand)
       rpn_expr << operand
       @next_op_is_unary = false
+      @after_paren = false
+    end
+
+    # Called after encountering a ) which is closing a function.
+    def pop_function
+      # pop the number of arguments to the function onto the expression; if
+      # we are immediately after the opening paren then there were no args.
+      function_args = @function_args
+      function_args += 1 unless @after_paren
+      rpn_expr << function_args.to_s
+      @function_args = 0
+
+      # pop the stacked function onto the rpn expression
+      rpn_expr << op_stack.pop
     end
 
     # The resulting output RPN expression

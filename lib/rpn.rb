@@ -14,7 +14,8 @@ module RPN
     'sqrt' => Function.new(->(a) { a.sqrt(5) }), # precision of at least 5dp
     'max' => Function.new(->(a, b) { [a, b].max }),
     'min' => Function.new(->(a, b) { [a, b].min }),
-    'sin' => Function.new(->(a) { Math.sin(a) })
+    'sin' => Function.new(->(a) { Math.sin(a) }),
+    'avg' => Function.new(->(*a) { a.sum / a.size })
   }.freeze
 
   # Match tokens for splitting out from an infix string.

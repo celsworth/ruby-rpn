@@ -26,15 +26,17 @@ RSpec.describe RPN::Expression do
     end
 
     it 'supports functions' do
-      expect(expression('sqrt(1)')).to eq %w(1 sqrt)
-      expect(expression('sqrt(1+1)')).to eq %w(1 1 + sqrt)
+      expect(expression('sqrt(())')).to eq %w(0 sqrt)
+      expect(expression('sqrt(1)')).to eq %w(1 1 sqrt)
+      expect(expression('sqrt(1+1)')).to eq %w(1 1 + 1 sqrt)
       expect(expression('sqrt(1+1) + sqrt(2+2)'))
-        .to eq %w(1 1 + sqrt 2 2 + sqrt +)
-      expect(expression('sqrt((1+1))')).to eq %w(1 1 + sqrt)
-      expect(expression('sqrt((2 + 3) * 4)')).to eq %w(2 3 + 4 * sqrt)
-      expect(expression('max(1, 2)')).to eq %w(1 2 max)
-      expect(expression('max(1 + 1, 2)')).to eq %w(1 1 + 2 max)
-      expect(expression('max((1 + 1), 2)')).to eq %w(1 1 + 2 max)
+        .to eq %w(1 1 + 1 sqrt 2 2 + 1 sqrt +)
+      expect(expression('sqrt((1+1))')).to eq %w(1 1 + 1 sqrt)
+      expect(expression('sqrt((2 + 3) * 4)')).to eq %w(2 3 + 4 * 1 sqrt)
+      expect(expression('max(1,2)')).to eq %w(1 2 2 max)
+      expect(expression('max(1, 2)')).to eq %w(1 2 2 max)
+      expect(expression('max(1 + 1, 2)')).to eq %w(1 1 + 2 2 max)
+      expect(expression('max((1 + 1), 2)')).to eq %w(1 1 + 2 2 max)
     end
 
     it 'supports scientific notation' do
@@ -133,6 +135,12 @@ RSpec.describe RPN::Expression do
       expect(outputs('sin(180)')).to eq infix: 'sin(180)', calc: Math.sin(180)
     end
 
+    it 'supports avg' do
+      expect(outputs('avg(1, 2, 3)')).to eq infix: 'avg(1, 2, 3)', calc: 2
+      expect(outputs('avg(1, 2, 3, 5)'))
+        .to eq infix: 'avg(1, 2, 3, 5)', calc: 2.75
+    end
+
     it 'supports no spacing' do
       expect(outputs('(1/1+2-0)*5^3'))
         .to eq infix: '(1 / 1 + 2 - 0) * (5 ^ 3)', calc: 375
@@ -185,6 +193,8 @@ RSpec.describe RPN::Expression do
       expect(outputs('sqrt((4 + 5) * 4)'))
         .to eq infix: 'sqrt((4 + 5) * 4)', calc: 6
       expect(outputs('max(1+1, 5)')).to eq infix: 'max(1 + 1, 5)', calc: 5
+      expect(outputs('max(max(1 + 1, 1e1), 5)'))
+        .to eq infix: 'max(max(1 + 1, 1e1), 5)', calc: 10
     end
 
     it 'does not add pointless parentheses' do

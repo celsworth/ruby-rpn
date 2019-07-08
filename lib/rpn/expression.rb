@@ -34,8 +34,9 @@ module RPN
 
       @expression.each do |term|
         if func = FUNCTIONS[term]
-          args = stack.pop(func.args) # array of BigDecimal
-          if args.size != func.args
+          argc = stack.pop # BigDecimal
+          args = stack.pop(argc) # array of BigDecimal
+          if args.size != argc
             raise ArgumentError, 'not enough operands on the stack'
           end
 
@@ -66,8 +67,9 @@ module RPN
 
       @expression.each do |term|
         n = if func = FUNCTIONS[term]
-              args = stack.pop(func.args)
-              if args.size != func.args
+              argc = Util.term_to_number(stack.pop.value)
+              args = stack.pop(argc)
+              if args.size != argc
                 raise ArgumentError, 'not enough operands on the stack'
               end
 
