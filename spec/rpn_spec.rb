@@ -123,11 +123,13 @@ RSpec.describe RPN::Expression do
 
     it 'supports max' do
       expect(outputs('max(1, 2)')).to eq infix: 'max(1, 2)', calc: 2
+      expect(outputs('max(3, 1, 2)')).to eq infix: 'max(3, 1, 2)', calc: 3
       expect(outputs('max(1+3, 2)')).to eq infix: 'max(1 + 3, 2)', calc: 4
     end
 
     it 'supports min' do
       expect(outputs('min(1, 2)')).to eq infix: 'min(1, 2)', calc: 1
+      expect(outputs('min(3, 1, 2)')).to eq infix: 'min(3, 1, 2)', calc: 1
       expect(outputs('min(1+3, 2)')).to eq infix: 'min(1 + 3, 2)', calc: 2
     end
 
@@ -135,10 +137,22 @@ RSpec.describe RPN::Expression do
       expect(outputs('sin(180)')).to eq infix: 'sin(180)', calc: Math.sin(180)
     end
 
-    it 'supports avg' do
-      expect(outputs('avg(1, 2, 3)')).to eq infix: 'avg(1, 2, 3)', calc: 2
-      expect(outputs('avg(1, 2, 3, 5)'))
-        .to eq infix: 'avg(1, 2, 3, 5)', calc: 2.75
+    it 'supports mean' do
+      expect(outputs('mean(1, 2, 3)')).to eq infix: 'mean(1, 2, 3)', calc: 2
+      expect(outputs('mean(1, 2, 3, 5)'))
+        .to eq infix: 'mean(1, 2, 3, 5)', calc: 2.75
+    end
+
+    it 'supports median' do
+      expect(outputs('median(1, 2, 3)')).to eq infix: 'median(1, 2, 3)', calc: 2
+      expect(outputs('median(6, 1, 7, 1)'))
+        .to eq infix: 'median(6, 1, 7, 1)', calc: 3.5
+    end
+
+    it 'supports mode' do
+      expect(outputs('mode(1, 1, 3)')).to eq infix: 'mode(1, 1, 3)', calc: 1
+      expect(outputs('mode(5, 3, 3, 1)'))
+        .to eq infix: 'mode(5, 3, 3, 1)', calc: 3
     end
 
     it 'supports no spacing' do
@@ -226,11 +240,6 @@ RSpec.describe RPN::Expression do
     it 'raises ArgumentError with unbalanced parentheses' do
       expect { outputs('(1+3))') }.to raise_error(ArgumentError)
       expect { outputs('((1+3)') }.to raise_error(ArgumentError)
-    end
-
-    it 'raises ArgumentError with insufficient function arguments' do
-      expect { outputs('sqrt()') }.to raise_error(ArgumentError)
-      expect { outputs('max(1)') }.to raise_error(ArgumentError)
     end
   end
 end

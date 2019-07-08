@@ -12,10 +12,18 @@ module RPN
 
   FUNCTIONS = {
     'sqrt' => Function.new(->(a) { a.sqrt(5) }), # precision of at least 5dp
-    'max' => Function.new(->(a, b) { [a, b].max }),
-    'min' => Function.new(->(a, b) { [a, b].min }),
     'sin' => Function.new(->(a) { Math.sin(a) }),
-    'avg' => Function.new(->(*a) { a.sum / a.size })
+    'max' => Function.new(->(*a) { a.max }),
+    'min' => Function.new(->(*a) { a.min }),
+    'mean' => Function.new(->(*a) { a.sum / a.size }),
+    'median' => Function.new(lambda do |*a|
+      a.sort!
+      hl = (a.size / 2.0).ceil
+      (a[hl - 1] + a[-hl]) / 2.0
+    end),
+    'mode' => Function.new(lambda do |*a|
+      a.group_by { |i| i }.values.max_by(&:size).first
+    end)
   }.freeze
 
   # Match tokens for splitting out from an infix string.

@@ -37,7 +37,7 @@ module RPN
 
       # When we're in function parentheses, each comma denotes a new function
       # argument; this is incremented when we find one. When we eventually
-      # encounter the closing parenthesois for a function, the integer is
+      # encounter the closing parenthesis for a function, the integer is
       # pushed onto the stack immediately before the function name, so the
       # calculator will know how many args the function has.
       @function_args = 0
@@ -95,7 +95,6 @@ module RPN
         op_stack << operator
         @next_op_is_unary = true
       end
-      @after_paren = false
     end
 
     # Called when we encounter a ,
@@ -109,7 +108,6 @@ module RPN
     def handle_comma
       rpn_expr << op_stack.pop until op_stack.empty? || op_stack.last == '('
       @function_args += 1
-      @after_paren = false
     end
 
     # Called when we encounter a (
@@ -146,7 +144,6 @@ module RPN
     def handle_operand(operand)
       rpn_expr << operand
       @next_op_is_unary = false
-      @after_paren = false
     end
 
     # Called after encountering a ) which is closing a function.
